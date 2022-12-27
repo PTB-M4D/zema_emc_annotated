@@ -97,8 +97,6 @@ sphinx:
     - poetry install --with docs
     - apt update
     - apt -y install pandoc
-    - python -m piptools sync docs-requirements.txt
-    - pip install .
     - sphinx-build -W --keep-going docs/ docs/_build
 
 black:
