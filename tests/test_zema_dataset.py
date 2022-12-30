@@ -11,7 +11,6 @@ from zema_emc_annotated.data_types import UncertainArray
 from zema_emc_annotated.dataset import (
     ExtractionDataType,
     LOCAL_ZEMA_DATASET_PATH,
-    ZEMA_DATASET_HASH,
     ZEMA_DATASET_URL,
     ZEMA_QUANTITIES,
     ZeMASamples,
@@ -124,10 +123,6 @@ def test_dataset_attribute_ZEMA_DATASET_URL_in_all() -> None:
 
 def test_dataset_has_attribute_ZEMA_DATASET_HASH() -> None:
     assert hasattr(dataset, "ZEMA_DATASET_HASH")
-
-
-def test_dataset_attribute_ZEMA_DATASET_HASH() -> None:
-    assert isinstance(ZEMA_DATASET_HASH, str)
 
 
 def test_dataset_attribute_ZEMA_DATASET_HASH_in_all() -> None:
