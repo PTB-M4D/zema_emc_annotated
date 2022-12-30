@@ -2,8 +2,8 @@
 
 __all__ = [
     "ExtractionDataType",
-    "provide_zema_samples",
     "LOCAL_ZEMA_DATASET_PATH",
+    "ZeMASamples",
     "ZEMA_DATASET_HASH",
     "ZEMA_DATASET_URL",
     "ZEMA_QUANTITIES",
@@ -12,6 +12,7 @@ __all__ = [
 import operator
 import os
 import pickle
+from dataclasses import dataclass
 from enum import Enum
 from functools import reduce
 from os.path import dirname, exists
@@ -22,9 +23,8 @@ import h5py
 import numpy as np
 from h5py import Dataset
 from numpy._typing import NDArray
-from pooch import retrieve
 
-from zema_emc_annotated.data_types import UncertainArray
+from zema_emc_annotated.data_types import RealMatrix, RealVector, UncertainArray
 
 LOCAL_ZEMA_DATASET_PATH = Path(dirname(__file__), "datasets")
 ZEMA_DATASET_HASH = (
@@ -47,19 +47,18 @@ class ExtractionDataType(Enum):
 
     Attributes
     ----------
-    UNCERTAINTIES : str
-        with value ``qudt:standardUncertainty``
     VALUES : str
         with value ``qudt:value``
+    UNCERTAINTIES : str
+        with value ``qudt:standardUncertainty``
     """
 
-    UNCERTAINTIES = "qudt:standardUncertainty"
     VALUES = "qudt:value"
+    UNCERTAINTIES = "qudt:standardUncertainty"
 
 
-def provide_zema_samples(
-    n_samples: int = 1, size_scaler: int = 1, normalize: bool = False
-) -> UncertainArray:
+@dataclass
+class ZeMASamples:
     """Extracts requested number of samples of values with associated uncertainties
 
     The underlying dataset is the annotated "Sensor data set of one electromechanical
@@ -68,101 +67,184 @@ def provide_zema_samples(
     Parameters
     ----------
     n_samples : int, optional
-        number of samples each containing size_scaler readings from each of the eleven
-        sensors with associated uncertainties, defaults to 1
+        number of samples each containing size_scaler readings from each of the
+        eleven sensors with associated uncertainties, defaults to 1
     size_scaler : int, optional
         number of sensor readings from each of the individual sensors per sample,
         defaults to 1
     normalize : bool, optional
         if ``True``, then data is centered around zero and scaled to unit std,
         defaults to False
-    Returns
-    -------
-    UncertainArray
-        The collection of samples of values with associated uncertainties, will be of
-        shape (n_samples, 11 x size_scaler)
+
+    Attributes
+    ----------
+    uncertain_values : UncertainArray
+        The collection of samples of values with associated uncertainties,
+        will be of shape (n_samples, 11 x size_scaler)
     """
 
-    def _normalize_if_requested(data: Dataset) -> NDArray[np.double]:
-        _potentially_normalized_data = data[np.s_[1 : size_scaler + 1, :n_samples]]
-        if normalize:
-            _potentially_normalized_data -= np.mean(data[:, :n_samples], axis=0)
-            _potentially_normalized_data /= np.std(data[:, :n_samples], axis=0)
-        return _potentially_normalized_data.transpose()
+    uncertain_values: UncertainArray
 
-    def _append_to_extraction(
-        append_to: NDArray[np.double], appendix: NDArray[np.double]
-    ) -> NDArray[np.double]:
-        return np.append(append_to, appendix, axis=1)
+    def __init__(
+        self, n_samples: int = 1, size_scaler: int = 1, normalize: bool = False
+    ):
 
-    if cached_data := _check_and_load_cache(n_samples):
-        return cached_data
-    dataset_full_path = retrieve(
-        url=ZEMA_DATASET_URL,
-        known_hash=ZEMA_DATASET_HASH,
-        path=LOCAL_ZEMA_DATASET_PATH,
-        progressbar=True,
-    )
-    assert exists(dataset_full_path)
-    uncertainties = np.empty((n_samples, 0))
-    values = np.empty((n_samples, 0))
-    relevant_datasets = (
-        ["ZeMA_DAQ", quantity, datatype.value]
-        for quantity in ZEMA_QUANTITIES
-        for datatype in ExtractionDataType
-    )
-    with h5py.File(dataset_full_path, "r") as h5f:
-        for dataset_descriptor in relevant_datasets:
-            dataset = cast(Dataset, reduce(operator.getitem, dataset_descriptor, h5f))
-            if ExtractionDataType.UNCERTAINTIES.value in dataset.name:
-                extracted_data = uncertainties
-                print(f"    Extract uncertainties from {dataset.name}")
-            elif ExtractionDataType.VALUES.value in dataset.name:
-                extracted_data = values
-                print(f"    Extract values from {dataset.name}")
-            else:
-                raise RuntimeError(
-                    "Somehow there is unexpected data in the dataset to be processed. "
-                    f"Did not expect to find {dataset.name}"
+        self.normalize = normalize
+        self.n_samples = n_samples
+        self.size_scaler = size_scaler
+        # if cached_data := _check_and_load_cache(n_samples, size_scaler):
+        #     return cached_data
+        dataset_full_path = (
+            "/home/bjorn/code/zema_emc_annotated/src/zema_emc_annotated/"
+            "datasets/394da54b1fc044fc498d60367c4e292d-axis11_2kHz_ZeMA_PTB_SI.h5"
+        )
+        # retrieve(
+        #     url=ZEMA_DATASET_URL,
+        #     known_hash=ZEMA_DATASET_HASH,
+        #     path=LOCAL_ZEMA_DATASET_PATH,
+        #     progressbar=True,
+        # )
+        assert exists(dataset_full_path)
+        self._uncertainties = np.empty((n_samples, 0))
+        self._values = np.empty((n_samples, 0))
+        relevant_datasets = (
+            ["ZeMA_DAQ", quantity, datatype.value]
+            for quantity in ZEMA_QUANTITIES
+            for datatype in ExtractionDataType
+        )
+        self._treating_uncertainties: bool = False
+        self._treating_values: bool = False
+        self._normalization_divisors: dict[str, NDArray[np.double] | float] = {}
+        with h5py.File(dataset_full_path, "r") as h5f:
+            for dataset_descriptor in relevant_datasets:
+                self._current_dataset: Dataset = cast(
+                    Dataset, reduce(operator.getitem, dataset_descriptor, h5f)
                 )
-            if dataset.shape[0] == 3:
-                for sensor in dataset:
-                    extracted_data = _append_to_extraction(
-                        extracted_data, _normalize_if_requested(sensor)
+                if ExtractionDataType.VALUES.value in self._current_dataset.name:
+                    self._treating_values = True
+                    print(f"    Extract values from {self._current_dataset.name}")
+                elif (
+                    ExtractionDataType.UNCERTAINTIES.value in self._current_dataset.name
+                ):
+                    self._treating_values = False
+                    print(
+                        f"    Extract uncertainties from {self._current_dataset.name}"
                     )
-            else:
-                extracted_data = _append_to_extraction(
-                    extracted_data, _normalize_if_requested(dataset)
+                else:
+                    raise RuntimeError(
+                        "Somehow there is unexpected data in the dataset to be"
+                        f"processed. Did not expect to find "
+                        f"{self._current_dataset.name}"
+                    )
+                if self._current_dataset.shape[0] == 3:
+                    for idx, sensor in enumerate(self._current_dataset):
+                        self._normalize_if_requested_and_append(
+                            sensor, self._extract_sub_dataset_name(idx)
+                        )
+                else:
+                    self._normalize_if_requested_and_append(
+                        self._current_dataset,
+                        self._strip_data_type_from_dataset_descriptor(),
+                    )
+                if self._treating_values:
+                    print("    Values extracted")
+                else:
+                    print("    Uncertainties extracted")
+        self._store_cache(
+            uncertain_values := UncertainArray(self._values, self._uncertainties)
+        )
+        self.uncertain_values = uncertain_values
+
+    def _normalize_if_requested_and_append(
+        self, data: Dataset, dataset_descriptor: str
+    ) -> None:
+        """Normalize the provided data and append according to current state"""
+        _potentially_normalized_data = data[
+            np.s_[1 : self.size_scaler + 1, : self.n_samples]
+        ]
+        if self._treating_values:
+            if self.normalize:
+                _potentially_normalized_data -= np.mean(
+                    data[:, : self.n_samples], axis=0
                 )
-            if ExtractionDataType.UNCERTAINTIES.value in dataset.name:
-                uncertainties = extracted_data
-                print("    Uncertainties extracted")
-            elif ExtractionDataType.VALUES.value in dataset.name:
-                values = extracted_data
-                print("    Values extracted")
-    uncertain_values = UncertainArray(np.array(values), np.array(uncertainties))
-    _store_cache(uncertain_values)
-    return uncertain_values
+                data_std = np.std(data[:, : self.n_samples], axis=0)
+                data_std[data_std == 0] = 1.0
+                self._normalization_divisors[dataset_descriptor] = data_std
+                _potentially_normalized_data /= self._normalization_divisors[
+                    dataset_descriptor
+                ]
+            self._values = np.append(
+                self._values, _potentially_normalized_data.transpose(), axis=1
+            )
+        else:
+            if self.normalize:
+                _potentially_normalized_data /= self._normalization_divisors[
+                    dataset_descriptor
+                ]
+            self._uncertainties = np.append(
+                self._uncertainties, _potentially_normalized_data.transpose(), axis=1
+            )
 
+    def _extract_sub_dataset_name(self, idx: int) -> str:
+        return str(
+            self._strip_data_type_from_dataset_descriptor()
+            + self._current_dataset.attrs["si:label"]
+            .split(",")[idx]
+            .strip("[")
+            .strip("]")
+            .replace(" ", "")
+            .replace('"', "")
+            .replace("uncertainty", "")
+        ).replace("\n", "")
 
-def _check_and_load_cache(n_samples: int) -> UncertainArray | None:
-    """Checks if corresponding file for n_samples exists and loads it with pickle"""
-    if os.path.exists(cache_path := _cache_path(n_samples)):
-        with open(cache_path, "rb") as cache_file:
-            return cast(UncertainArray, pickle.load(cache_file))
-    return None
+    def _strip_data_type_from_dataset_descriptor(self) -> str:
+        return str(
+            self._current_dataset.name.replace(
+                ExtractionDataType.UNCERTAINTIES.value, ""
+            ).replace(ExtractionDataType.VALUES.value, "")
+        )
 
+    @property
+    def values(self) -> RealVector:
+        """The values of the stored :class:`UncertainArray` object"""
+        return self.uncertain_values.values
 
-def _cache_path(n_samples: int) -> Path:
-    """Local file system path for a cache file containing n ZeMA samples
+    @property
+    def uncertainties(self) -> RealMatrix | RealVector:
+        """The uncertainties of the stored :class:`UncertainArray` object"""
+        return self.uncertain_values.uncertainties
 
-    The result does not guarantee, that the file at the specified location exists,
-    but can be used to check for existence or creation.
-    """
-    return LOCAL_ZEMA_DATASET_PATH.joinpath(f"{str(n_samples)}_samples.pickle")
+    @staticmethod
+    def _check_and_load_cache(
+        n_samples: int, size_scaler: int
+    ) -> UncertainArray | None:
+        """Checks if corresponding file for n_samples exists and loads it with pickle"""
+        if os.path.exists(
+            cache_path := ZeMASamples._cache_path(n_samples, size_scaler)
+        ):
+            with open(cache_path, "rb") as cache_file:
+                return cast(UncertainArray, pickle.load(cache_file))
+        return None
 
+    @staticmethod
+    def _cache_path(n_samples: int, size_scaler: int) -> Path:
+        """Local file system path for a cache file containing n ZeMA samples
 
-def _store_cache(uncertain_values: UncertainArray) -> None:
-    """Dumps provided uncertain tenor to corresponding pickle file"""
-    with open(_cache_path(len(uncertain_values.values)), "wb") as cache_file:
-        pickle.dump(uncertain_values, cache_file)
+        The result does not guarantee, that the file at the specified location exists,
+        but can be used to check for existence or creation.
+        """
+        return LOCAL_ZEMA_DATASET_PATH.joinpath(
+            f"{str(n_samples)}_samples_with_{str(size_scaler)}_values_per_sensor.pickle"
+        )
+
+    @staticmethod
+    def _store_cache(uncertain_values: UncertainArray) -> None:
+        """Dumps provided uncertain tenor to corresponding pickle file"""
+        with open(
+            ZeMASamples._cache_path(
+                uncertain_values.values.shape[0],
+                int(uncertain_values.values.shape[1] / 11),
+            ),
+            "wb",
+        ) as cache_file:
+            pickle.dump(uncertain_values, cache_file)
