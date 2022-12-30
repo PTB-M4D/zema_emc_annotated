@@ -67,14 +67,16 @@ class ZeMASamples:
     Parameters
     ----------
     n_samples : int, optional
-        number of samples each containing size_scaler readings from each of the
-        eleven sensors with associated uncertainties, defaults to 1
+        number of samples each containing the first ``size_scaler`` readings from each
+        of the eleven sensors for one of the cycles with associated uncertainties,
+        defaults to 1 and must be between 1 and 476
     size_scaler : int, optional
-        number of sensor readings from each of the individual sensors per sample,
-        defaults to 1
+        number of sensor readings from each of the individual sensors per sample/cycle,
+        defaults to 1 and should be between 1 and 2000, as there are only 2000
+        readings per cycle, higher values will be clipped to 2000
     normalize : bool, optional
-        if ``True``, then data is centered around zero and scaled to unit std,
-        defaults to False
+        if ``True``, then values are centered around zero and values and
+        uncertainties are scaled to values' unit std, defaults to ``False``
 
     Attributes
     ----------
