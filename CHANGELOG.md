@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.1 (2022-12-30)
+### Fix
+* **dataset:** Remove strict hash checking to drastically increase performance ([`00a7a73`](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commit/00a7a7367eb69221b6ff395151a392080cef32c8))
+
 ## v0.2.0 (2022-12-30)
 ### Feature
 * **dataset:** Turn dataset provider into class and fix normalization ([`e92c9bb`](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commit/e92c9bb77b074bebef7ed91fb222361bdc633d06))
