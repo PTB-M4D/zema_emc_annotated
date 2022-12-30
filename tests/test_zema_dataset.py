@@ -4,21 +4,17 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from hypothesis import given, settings, strategies as hst
+from hypothesis import assume, given, settings, strategies as hst
 
 from zema_emc_annotated import dataset
 from zema_emc_annotated.data_types import UncertainArray
 from zema_emc_annotated.dataset import (
-    _cache_path,
-    _check_and_load_cache,
-    _store_cache,
     ExtractionDataType,
     LOCAL_ZEMA_DATASET_PATH,
-    provide_zema_samples,
     ZEMA_DATASET_HASH,
     ZEMA_DATASET_URL,
-    ZEMA_DATATYPES,
     ZEMA_QUANTITIES,
+    ZeMASamples,
 )
 from .conftest import uncertain_arrays
 
@@ -49,28 +45,18 @@ def test_dataset_extraction_data_contains_key_for_values() -> None:
     assert "qudt:value" in ExtractionDataType._value2member_map_
 
 
+def test_dataset_extraction_data_contains_first_values_and_then_uncertainties() -> None:
+    ordered_extraction_data_type = tuple(datatype for datatype in ExtractionDataType)
+    assert "value" in ordered_extraction_data_type[0].value
+
+
+def test_dataset_extraction_data_contains_uncertainties_at_second_position() -> None:
+    ordered_extraction_data_type = tuple(datatype for datatype in ExtractionDataType)
+    assert "Uncertainty" in ordered_extraction_data_type[1].value
+
+
 def test_dataset_all_contains_extraction_data() -> None:
     assert ExtractionDataType.__name__ in dataset.__all__
-
-
-def test_dataset_has_constant_datatypes() -> None:
-    assert hasattr(dataset, "ZEMA_DATATYPES")
-
-
-def test_dataset_constant_datatypes_is_tuple() -> None:
-    assert isinstance(ZEMA_DATATYPES, tuple)
-
-
-def test_dataset_constant_datatypes_contains_uncertainties() -> None:
-    assert "qudt:standardUncertainty" in ZEMA_DATATYPES
-
-
-def test_dataset_constant_datatypes_contains_for_values() -> None:
-    assert "qudt:value" in ZEMA_DATATYPES
-
-
-def test_dataset_all_contains_constant_datatypes() -> None:
-    assert "ZEMA_DATATYPES" in dataset.__all__
 
 
 def test_dataset_has_constant_quantities() -> None:
@@ -149,139 +135,183 @@ def test_dataset_attribute_ZEMA_DATASET_HASH_in_all() -> None:
     assert "ZEMA_DATASET_HASH" in dataset.__all__
 
 
-def test_dataset_has_attribute_extract_samples() -> None:
-    assert hasattr(dataset, "provide_zema_samples")
+def test_dataset_has_attribute_zema_samples() -> None:
+    assert hasattr(dataset, "ZeMASamples")
 
 
-def test_dataset_extract_samples_is_callable() -> None:
-    assert callable(provide_zema_samples)
+def test_zema_samples_is_callable() -> None:
+    assert callable(ZeMASamples)
 
 
-def test_dataset_all_contains_extract_samples() -> None:
-    assert provide_zema_samples.__name__ in dataset.__all__
+def test_dataset_all_contains_zema_samples() -> None:
+    assert ZeMASamples.__name__ in dataset.__all__
 
 
-def test_extract_samples_has_docstring() -> None:
-    assert provide_zema_samples.__doc__ is not None
+def test_zema_samples_has_docstring() -> None:
+    assert ZeMASamples.__doc__ is not None
 
 
-def test_dataset_has_attribute_check_and_load_cache() -> None:
-    assert hasattr(dataset, "_check_and_load_cache")
+def test_zema_samples_has_attribute_check_and_load_cache() -> None:
+    assert hasattr(ZeMASamples, "_check_and_load_cache")
 
 
 def test_dataset_check_and_load_cache_is_callable() -> None:
-    assert callable(_check_and_load_cache)
+    assert callable(ZeMASamples._check_and_load_cache)
 
 
 def test_check_and_load_cache_has_docstring() -> None:
-    assert _check_and_load_cache.__doc__ is not None
+    assert ZeMASamples._check_and_load_cache.__doc__ is not None
 
 
 def test_check_and_load_cache_expects_parameter_n_samples() -> None:
-    assert "n_samples" in signature(_check_and_load_cache).parameters
+    assert "n_samples" in signature(ZeMASamples._check_and_load_cache).parameters
 
 
 def test_check_and_load_cache_expects_parameter_n_samples_as_int() -> None:
-    assert signature(_check_and_load_cache).parameters["n_samples"].annotation is int
+    assert (
+        signature(ZeMASamples._check_and_load_cache).parameters["n_samples"].annotation
+        is int
+    )
 
 
-def test_dataset_has_attribute_cache_path() -> None:
-    assert hasattr(dataset, "_cache_path")
+def test_check_and_load_cache_expects_parameter_size_scaler() -> None:
+    assert "size_scaler" in signature(ZeMASamples._check_and_load_cache).parameters
+
+
+def test_check_and_load_cache_expects_parameter_size_scaler_as_int() -> None:
+    assert (
+        signature(ZeMASamples._check_and_load_cache)
+        .parameters["size_scaler"]
+        .annotation
+        is int
+    )
+
+
+def test_zema_samples_has_attribute_cache_path() -> None:
+    assert hasattr(ZeMASamples, "_cache_path")
 
 
 def test_dataset_cache_path_is_callable() -> None:
-    assert callable(_cache_path)
+    assert callable(ZeMASamples._cache_path)
 
 
 def test_cache_path_has_docstring() -> None:
-    assert _cache_path.__doc__ is not None
+    assert ZeMASamples._cache_path.__doc__ is not None
 
 
 def test_cache_path_expects_parameter_n_samples() -> None:
-    assert "n_samples" in signature(_cache_path).parameters
+    assert "n_samples" in signature(ZeMASamples._cache_path).parameters
+
+
+def test_cache_path_expects_parameter_size_scaler() -> None:
+    assert "size_scaler" in signature(ZeMASamples._cache_path).parameters
 
 
 def test_cache_path_expects_parameter_n_samples_as_int() -> None:
-    assert signature(_cache_path).parameters["n_samples"].annotation is int
+    assert signature(ZeMASamples._cache_path).parameters["n_samples"].annotation is int
 
 
-@given(hst.integers())
-def test_cache_path_actually_returns_path(integer: int) -> None:
-    assert isinstance(_cache_path(integer), Path)
+def test_cache_path_expects_parameter_size_scaler_as_int() -> None:
+    assert (
+        signature(ZeMASamples._cache_path).parameters["size_scaler"].annotation is int
+    )
 
 
-def test_dataset_has_attribute_store_cache() -> None:
-    assert hasattr(dataset, "_store_cache")
+@given(hst.integers(), hst.integers())
+def test_cache_path_actually_returns_path(n_samples: int, size_scaler: int) -> None:
+    assert isinstance(ZeMASamples._cache_path(n_samples, size_scaler), Path)
+
+
+def test_zema_samples_has_attribute_store_cache() -> None:
+    assert hasattr(ZeMASamples, "_store_cache")
 
 
 def test_dataset_store_cache_is_callable() -> None:
-    assert callable(_store_cache)
+    assert callable(ZeMASamples._store_cache)
 
 
 def test_store_cache_has_docstring() -> None:
-    assert _store_cache.__doc__ is not None
+    assert ZeMASamples._store_cache.__doc__ is not None
 
 
 def test_store_cache_expects_parameter_uncertain_values() -> None:
-    assert "uncertain_values" in signature(_store_cache).parameters
+    assert "uncertain_values" in signature(ZeMASamples._store_cache).parameters
 
 
-@given(uncertain_arrays(length=11))
+@given(uncertain_arrays(samples=11))
+@settings(deadline=None)
 def test_store_cache_runs_for_random_uncertain_values(
     uncertain_array: UncertainArray,
 ) -> None:
-    _store_cache(uncertain_array)
-    assert os.path.exists(_cache_path(11))
+    ZeMASamples._store_cache(uncertain_array)
+    assert os.path.exists(
+        ZeMASamples._cache_path(11, int(uncertain_array.values.shape[1] / 11))
+    )
 
 
-@given(hst.integers())
+@given(hst.integers(), hst.integers())
 def test_check_and_load_cache_runs_for_random_uncertain_values_and_returns(
-    integer: int,
+    n_samples: int, size_scaler: int
 ) -> None:
-    result = _check_and_load_cache(integer)
+    result = ZeMASamples._check_and_load_cache(n_samples, size_scaler)
     assert result is None or isinstance(result, UncertainArray)
 
 
-@given(uncertain_arrays(length=12))
+@given(uncertain_arrays(samples=12))
 def test_check_and_load_cache_returns_something_for_existing_file(
     uncertain_array: UncertainArray,
 ) -> None:
-    _store_cache(uncertain_array)
-    assert _check_and_load_cache(12) is not None
+    ZeMASamples._store_cache(uncertain_array)
+    assert (
+        ZeMASamples._check_and_load_cache(12, int(uncertain_array.values.shape[1] / 11))
+        is not None
+    )
 
 
 def test_store_cache_expects_parameter_uncertain_values_as_uncertain_array() -> None:
     assert (
-        signature(_store_cache).parameters["uncertain_values"].annotation
+        signature(ZeMASamples._store_cache).parameters["uncertain_values"].annotation
         is UncertainArray
     )
 
 
 def test_cache_path_expects_stats_to_return_path() -> None:
-    assert signature(_cache_path).return_annotation is Path
+    assert signature(ZeMASamples._cache_path).return_annotation is Path
 
 
 def test_dataset_extract_samples_expects_parameter_n_samples() -> None:
-    assert "n_samples" in signature(provide_zema_samples).parameters
+    assert "n_samples" in signature(ZeMASamples).parameters
+
+
+def test_dataset_extract_samples_expects_parameter_size_scaler() -> None:
+    assert "size_scaler" in signature(ZeMASamples).parameters
 
 
 def test_dataset_extract_samples_expects_parameter_n_samples_as_int() -> None:
-    assert signature(provide_zema_samples).parameters["n_samples"].annotation is int
+    assert signature(ZeMASamples).parameters["n_samples"].annotation is int
+
+
+def test_dataset_zema_samples_expects_parameter_size_scaler_as_int() -> None:
+    assert signature(ZeMASamples).parameters["size_scaler"].annotation is int
 
 
 def test_dataset_extract_samples_parameter_n_samples_default_is_one() -> None:
-    assert signature(provide_zema_samples).parameters["n_samples"].default == 1
+    assert signature(ZeMASamples).parameters["n_samples"].default == 1
 
 
-def test_dataset_extract_samples_states_to_return_uncertain_array() -> None:
-    assert signature(provide_zema_samples).return_annotation is UncertainArray
+def test_dataset_extract_samples_parameter_size_scaler_default_is_one() -> None:
+    assert signature(ZeMASamples).parameters["size_scaler"].default == 1
+
+
+def test_dataset_zema_samples_states_uncertain_values_are_uncertain_array() -> None:
+    assert ZeMASamples.__annotations__["uncertain_values"] is UncertainArray
 
 
 @pytest.mark.webtest
 @given(hst.integers(min_value=1, max_value=10))
 @settings(deadline=None)
 def test_extract_samples_actually_returns_uncertain_array(n_samples: int) -> None:
-    assert isinstance(provide_zema_samples(n_samples), UncertainArray)
+    assert isinstance(ZeMASamples(n_samples).uncertain_values, UncertainArray)
 
 
 @pytest.mark.webtest
@@ -290,7 +320,7 @@ def test_extract_samples_actually_returns_uncertain_array(n_samples: int) -> Non
 def test_extract_samples_actually_returns_uncertain_array_with_n_samples_values(
     n_samples: int,
 ) -> None:
-    assert len(provide_zema_samples(n_samples).values) == n_samples
+    assert len(ZeMASamples(n_samples).values) == n_samples
 
 
 @pytest.mark.webtest
@@ -299,7 +329,7 @@ def test_extract_samples_actually_returns_uncertain_array_with_n_samples_values(
 def test_extract_samples_actually_returns_uncertain_array_with_n_samples_uncertainties(
     n_samples: int,
 ) -> None:
-    result_uncertainties = provide_zema_samples(n_samples).uncertainties
+    result_uncertainties = ZeMASamples(n_samples).uncertainties
     assert result_uncertainties is not None
     assert len(result_uncertainties) == n_samples
 
@@ -307,21 +337,41 @@ def test_extract_samples_actually_returns_uncertain_array_with_n_samples_uncerta
 @pytest.mark.webtest
 @given(hst.integers(min_value=1, max_value=10))
 @settings(deadline=None)
-def test_extract_samples_returns_values_of_eleven_sensors(
+def test_default_extract_samples_returns_values_of_eleven_sensors(
     n_samples: int,
 ) -> None:
-    assert provide_zema_samples(n_samples).values.shape[1] == 11
+    assert ZeMASamples(n_samples).values.shape[1] == 11
+
+
+@pytest.mark.webtest
+@given(hst.integers(min_value=1, max_value=10), hst.integers(min_value=1, max_value=10))
+@settings(deadline=None)
+def test_extract_samples_returns_eleven_times_scaler_values(
+    n_samples: int, size_scaler: int
+) -> None:
+    assert ZeMASamples(n_samples, size_scaler).values.shape[1] == 11 * size_scaler
 
 
 @pytest.mark.webtest
 @given(hst.integers(min_value=1, max_value=10))
 @settings(deadline=None)
-def test_extract_samples_returns_uncertainties_of_eleven_sensors(
+def test_default_extract_samples_returns_uncertainties_of_eleven_sensors(
     n_samples: int,
 ) -> None:
-    result_uncertainties = provide_zema_samples(n_samples).uncertainties
+    result_uncertainties = ZeMASamples(n_samples).uncertainties
     assert result_uncertainties is not None
     assert result_uncertainties.shape[1] == 11
+
+
+@pytest.mark.webtest
+@given(hst.integers(min_value=1, max_value=10), hst.integers(min_value=1, max_value=10))
+@settings(deadline=None)
+def test_extract_samples_returns_eleven_times_scaler_uncertainties(
+    n_samples: int, size_scaler: int
+) -> None:
+    result_uncertainties = ZeMASamples(n_samples, size_scaler).uncertainties
+    assert result_uncertainties is not None
+    assert result_uncertainties.shape[1] == 11 * size_scaler
 
 
 @pytest.mark.webtest
@@ -330,5 +380,16 @@ def test_extract_samples_returns_uncertainties_of_eleven_sensors(
 def test_extract_samples_returns_values_and_uncertainties_which_are_not_similar(
     n_samples: int,
 ) -> None:
-    result = provide_zema_samples(n_samples)
+    result = ZeMASamples(n_samples)
     assert not np.all(result.values == result.uncertainties)
+
+
+@pytest.mark.webtest
+# @given(hst.integers(min_value=2, max_value=10), hst.integers(min_value=2, max_value=10))
+# @settings(deadline=None)
+def test_extract_samples_returns_normalized_values(
+    # n_samples: int, size_scaler: int
+) -> None:
+    # result = ZeMASamples(n_samples, size_scaler, True)
+    result = ZeMASamples(2, 5, True)
+    assert result.values.shape[1] == 11 * 5
