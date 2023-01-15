@@ -16,6 +16,8 @@ from zema_emc_annotated.dataset import (
     ZeMASamples,
 )
 
+small_positive_integers = hst.integers(min_value=1, max_value=10)
+
 
 def test_dataset_has_docstring() -> None:
     assert dataset.__doc__ is not None
@@ -210,7 +212,7 @@ def test_store_cache_expects_parameter_normalize() -> None:
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers)
 @settings(deadline=None)
 def test_store_cache_stores_pickle_file_for_random_input(size_scaler: int) -> None:
     zema_samples = ZeMASamples(11, size_scaler)
@@ -220,7 +222,7 @@ def test_store_cache_stores_pickle_file_for_random_input(size_scaler: int) -> No
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10), hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers, small_positive_integers)
 @settings(deadline=None)
 def test_check_and_load_cache_runs_for_random_uncertain_values_and_returns(
     n_samples: int, size_scaler: int
@@ -232,7 +234,7 @@ def test_check_and_load_cache_runs_for_random_uncertain_values_and_returns(
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers)
 @settings(deadline=None)
 def test_check_and_load_cache_returns_something_for_existing_file(
     size_scaler: int,
@@ -264,7 +266,7 @@ def test_dataset_extract_samples_expects_parameter_n_samples() -> None:
     assert "n_samples" in signature(ZeMASamples).parameters
 
 
-def test_dataset_extract_samples_expects_parameter_size_scaler() -> None:
+def test_zema_samples_expects_parameter_size_scaler() -> None:
     assert "size_scaler" in signature(ZeMASamples).parameters
 
 
@@ -276,7 +278,7 @@ def test_dataset_zema_samples_expects_parameter_size_scaler_as_int() -> None:
     assert signature(ZeMASamples).parameters["size_scaler"].annotation is int
 
 
-def test_dataset_extract_samples_parameter_n_samples_default_is_one() -> None:
+def test_zema_samples_parameter_n_samples_default_is_one() -> None:
     assert signature(ZeMASamples).parameters["n_samples"].default == 1
 
 
@@ -289,14 +291,14 @@ def test_dataset_zema_samples_states_uncertain_values_are_uncertain_array() -> N
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers)
 @settings(deadline=None)
 def test_extract_samples_actually_returns_uncertain_array(n_samples: int) -> None:
     assert isinstance(ZeMASamples(n_samples).uncertain_values, UncertainArray)
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers)
 @settings(deadline=None)
 def test_extract_samples_actually_returns_uncertain_array_with_n_samples_values(
     n_samples: int,
@@ -305,7 +307,7 @@ def test_extract_samples_actually_returns_uncertain_array_with_n_samples_values(
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers)
 @settings(deadline=None)
 def test_extract_samples_actually_returns_uncertain_array_with_n_samples_uncertainties(
     n_samples: int,
@@ -316,7 +318,7 @@ def test_extract_samples_actually_returns_uncertain_array_with_n_samples_uncerta
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers)
 @settings(deadline=None)
 def test_default_extract_samples_returns_values_of_eleven_sensors(
     n_samples: int,
@@ -325,7 +327,7 @@ def test_default_extract_samples_returns_values_of_eleven_sensors(
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10), hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers, small_positive_integers)
 @settings(deadline=None)
 def test_extract_samples_returns_eleven_times_scaler_values(
     n_samples: int, size_scaler: int
@@ -334,7 +336,7 @@ def test_extract_samples_returns_eleven_times_scaler_values(
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers)
 @settings(deadline=None)
 def test_default_extract_samples_returns_uncertainties_of_eleven_sensors(
     n_samples: int,
@@ -345,7 +347,7 @@ def test_default_extract_samples_returns_uncertainties_of_eleven_sensors(
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10), hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers, small_positive_integers)
 @settings(deadline=None)
 def test_extract_samples_returns_eleven_times_scaler_uncertainties(
     n_samples: int, size_scaler: int
@@ -356,7 +358,7 @@ def test_extract_samples_returns_eleven_times_scaler_uncertainties(
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers)
 @settings(deadline=None)
 def test_extract_samples_returns_values_and_uncertainties_which_are_not_similar(
     n_samples: int,
@@ -372,7 +374,7 @@ def test_zema_samples_fails_for_more_than_4766_samples() -> None:
         match=r"all the input array dimensions except for the concatenation axis must "
         r"match exactly.*",
     ):
-        ZeMASamples(4767)
+        ZeMASamples(4766 + n_samples_above_max)
 
 
 @pytest.mark.webtest
@@ -383,7 +385,7 @@ def test_zema_samples_creates_pickle_files() -> None:
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10), hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers, small_positive_integers)
 @settings(deadline=None)
 def test_zema_samples_normalized_mean_is_smaller_or_equal(
     n_samples: int, size_scaler: int
@@ -394,7 +396,7 @@ def test_zema_samples_normalized_mean_is_smaller_or_equal(
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10), hst.integers(min_value=1, max_value=10))
+@given(small_positive_integers, small_positive_integers)
 @settings(deadline=None)
 def test_zema_samples_normalized_std_is_smaller_or_equal(
     n_samples: int, size_scaler: int
