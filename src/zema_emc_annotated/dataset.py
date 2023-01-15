@@ -64,7 +64,7 @@ class ZeMASamples:
     n_samples : int, optional
         number of samples each containing the first ``size_scaler`` readings from each
         of the eleven sensors for one of the cycles with associated uncertainties,
-        defaults to 1 and must be between 1 and 476
+        defaults to 1 and must be between 1 and 4766 - idx_start
     size_scaler : int, optional
         number of sensor readings from each of the individual sensors per sample/cycle,
         defaults to 1 and should be between 1 and 2000, as there are only 2000
@@ -72,6 +72,9 @@ class ZeMASamples:
     normalize : bool, optional
         if ``True``, then values are centered around zero and values and
         uncertainties are scaled to values' unit std, defaults to ``False``
+    idx_start : int, optional
+        index of first sample to be extracted, defaults to 0 and must be between 0
+        and 4765
 
     Attributes
     ----------
@@ -83,9 +86,14 @@ class ZeMASamples:
     uncertain_values: UncertainArray
 
     def __init__(
-        self, n_samples: int = 1, size_scaler: int = 1, normalize: bool = False
+        self,
+        n_samples: int = 1,
+        size_scaler: int = 1,
+        normalize: bool = False,
+        idx_start: int = 0,
     ):
-        self.n_samples = n_samples
+
+        self.samples_slice: slice = np.s_[idx_start : idx_start + n_samples]
         self.size_scaler = size_scaler
         if cached_data := self._check_and_load_cache(normalize):
             self.uncertain_values = cached_data
@@ -171,13 +179,13 @@ class ZeMASamples:
     ) -> None:
         """Normalize the provided values and append according to current state"""
         _potentially_normalized_values = values[
-            np.s_[: self.size_scaler, : self.n_samples]
+            np.s_[: self.size_scaler, self.samples_slice]
         ]
         if normalize:
             _potentially_normalized_values -= np.mean(
-                values[:, : self.n_samples], axis=0
+                values[:, self.samples_slice], axis=0
             )
-            data_std = np.std(values[:, : self.n_samples], axis=0)
+            data_std = np.std(values[:, self.samples_slice], axis=0)
             data_std[data_std == 0] = 1.0
             self._normalization_divisors[dataset_descriptor] = data_std
             _potentially_normalized_values /= self._normalization_divisors[
@@ -192,7 +200,7 @@ class ZeMASamples:
     ) -> None:
         """Normalize the provided uncertainties and append according to current state"""
         _potentially_normalized_uncertainties = uncertainties[
-            np.s_[: self.size_scaler, : self.n_samples]
+            np.s_[: self.size_scaler, self.samples_slice]
         ]
         if normalize:
             _potentially_normalized_uncertainties /= self._normalization_divisors[
@@ -246,9 +254,17 @@ class ZeMASamples:
         The result does not guarantee, that the file at the specified location exists,
         but can be used to check for existence or creation.
         """
+        assert self.samples_slice.stop is not None  # pylint: disable=no-member
+        idx_start = self.samples_slice.start  # pylint: disable=no-member
+        n_samples = (
+            self.samples_slice.stop - idx_start  # pylint: disable=no-member
+            if self.samples_slice.start is not None  # pylint: disable=no-member
+            else self.samples_slice.stop  # pylint: disable=no-member
+        )
         return LOCAL_ZEMA_DATASET_PATH.joinpath(
-            f"{str(self.n_samples)}_samples_with"
-            f"_{str(self.size_scaler)}_values_per_sensor"
+            f"{str(n_samples)}_samples"
+            f"{'_starting_from_' + str(idx_start) if idx_start else ''}_with_"
+            f"{str(self.size_scaler)}_values_per_sensor"
             f"{'_normalized' if normalize else ''}.pickle"
         )
 
