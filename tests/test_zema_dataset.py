@@ -254,7 +254,11 @@ def test_cache_path_expects_stats_to_return_path() -> None:
     assert signature(ZeMASamples._cache_path).return_annotation is Path
 
 
-def test_dataset_extract_samples_expects_parameter_n_samples() -> None:
+def test_zema_samples_expects_parameter_idx_start() -> None:
+    assert "idx_start" in signature(ZeMASamples).parameters
+
+
+def test_zema_samples_expects_parameter_n_samples() -> None:
     assert "n_samples" in signature(ZeMASamples).parameters
 
 
@@ -262,8 +266,20 @@ def test_zema_samples_expects_parameter_size_scaler() -> None:
     assert "size_scaler" in signature(ZeMASamples).parameters
 
 
-def test_dataset_extract_samples_expects_parameter_n_samples_as_int() -> None:
+def test_zema_samples_expects_parameter_normalize() -> None:
+    assert "normalize" in signature(ZeMASamples).parameters
+
+
+def test_zema_samples_expects_parameter_n_samples_as_int() -> None:
     assert signature(ZeMASamples).parameters["n_samples"].annotation is int
+
+
+def test_zema_samples_expects_parameter_idx_start_as_int() -> None:
+    assert signature(ZeMASamples).parameters["idx_start"].annotation is int
+
+
+def test_zema_samples_expects_parameter_normalize_as_bool() -> None:
+    assert signature(ZeMASamples).parameters["normalize"].annotation is bool
 
 
 def test_dataset_zema_samples_expects_parameter_size_scaler_as_int() -> None:
@@ -274,7 +290,15 @@ def test_zema_samples_parameter_n_samples_default_is_one() -> None:
     assert signature(ZeMASamples).parameters["n_samples"].default == 1
 
 
-def test_dataset_extract_samples_parameter_size_scaler_default_is_one() -> None:
+def test_zema_samples_parameter_idx_start_default_is_zero() -> None:
+    assert signature(ZeMASamples).parameters["idx_start"].default == 0
+
+
+def test_zema_samples_parameter_normalize_default_is_false() -> None:
+    assert not signature(ZeMASamples).parameters["normalize"].default
+
+
+def test_zema_samples_parameter_size_scaler_default_is_one() -> None:
     assert signature(ZeMASamples).parameters["size_scaler"].default == 1
 
 
@@ -360,7 +384,11 @@ def test_extract_samples_returns_values_and_uncertainties_which_are_not_similar(
 
 
 @pytest.mark.webtest
-def test_zema_samples_fails_for_more_than_4766_samples() -> None:
+@given(hst.integers(min_value=1, max_value=10000))
+@settings(deadline=None)
+def test_zema_samples_fails_for_more_than_4766_samples(
+    n_samples_above_max: int,
+) -> None:
     with pytest.raises(
         ValueError,
         match=r"all the input array dimensions except for the concatenation axis must "
@@ -396,3 +424,18 @@ def test_zema_samples_normalized_std_is_smaller_or_equal(
     normalized_result = ZeMASamples(n_samples, size_scaler, True)
     not_normalized_result = ZeMASamples(n_samples, size_scaler)
     assert not_normalized_result.values.std() >= normalized_result.values.std()
+
+
+@pytest.mark.webtest
+@given(
+    small_positive_integers,
+    small_positive_integers,
+    hst.booleans(),
+    hst.integers(min_value=1, max_value=9),
+)
+@settings(deadline=None)
+def test_zema_samples_cache_path_contains_starting_from_for_larger_than_zero_startpoint(
+    n_samples: int, size_scaler: int, normalize: bool, idx_start: int
+) -> None:
+    zema_samples = ZeMASamples(n_samples, size_scaler, normalize, idx_start)
+    assert "_starting_from_" in str(zema_samples._cache_path(normalize))
