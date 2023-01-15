@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.3.0 (2023-01-15)
+### Feature
+* **dataset:** Introduce parameter to choose first sample to be extracted ([`125fe83`](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commit/125fe8362dca4db3feeebf5d7b5c6030a93a3e2c))
+
 ## v0.2.1 (2022-12-30)
 ### Fix
 * **dataset:** Remove strict hash checking to drastically increase performance ([`00a7a73`](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commit/00a7a7367eb69221b6ff395151a392080cef32c8))

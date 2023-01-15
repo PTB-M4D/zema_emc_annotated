@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "zema_emc_annotated"
-version = "0.2.1"
+version = "0.3.0"
 description = "API to the annotated ZeMA dataset about an electro-mechanical cylinder"
 authors = [
     "Bjoern Ludwig <bjoern.ludwig@ptb.de>",
