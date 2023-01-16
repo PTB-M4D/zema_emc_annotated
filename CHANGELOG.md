@@ -2,6 +2,13 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2023-01-16)
+### Feature
+* **dataset:** Leave storage location specification to pooch to share data across local projects ([`dc7d7c9`](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commit/dc7d7c9fbb61a3d0fe5e55e51d58b03a3d1ab6a5))
+
+### Documentation
+* **notebook:** Adapt read_dataset.ipynb to new implementation without manual cache location spec ([`18be701`](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commit/18be7018f7d797293f58d1383760949175343b81))
+
 ## v0.3.0 (2023-01-15)
 ### Feature
 * **dataset:** Introduce parameter to choose first sample to be extracted ([`125fe83`](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commit/125fe8362dca4db3feeebf5d7b5c6030a93a3e2c))
