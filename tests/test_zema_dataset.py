@@ -1,5 +1,5 @@
-import os
 from inspect import signature
+from os.path import exists
 from pathlib import Path
 
 import numpy as np
@@ -195,7 +195,7 @@ def test_store_cache_expects_parameter_normalize() -> None:
 @settings(deadline=None)
 def test_store_cache_stores_pickle_file_for_random_input(size_scaler: int) -> None:
     zema_samples = ZeMASamples(11, size_scaler)
-    assert os.path.exists(
+    assert exists(
         zema_samples._cache_path(signature(ZeMASamples).parameters["normalize"].default)
     )
 
