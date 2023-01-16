@@ -10,7 +10,6 @@ from zema_emc_annotated import dataset
 from zema_emc_annotated.data_types import UncertainArray
 from zema_emc_annotated.dataset import (
     ExtractionDataType,
-    LOCAL_ZEMA_DATASET_PATH,
     ZEMA_DATASET_URL,
     ZEMA_QUANTITIES,
     ZeMASamples,
@@ -97,18 +96,6 @@ def test_dataset_constant_quantities_contains_velocity() -> None:
 
 def test_dataset_all_contains_constant_quantities() -> None:
     assert "ZEMA_QUANTITIES" in dataset.__all__
-
-
-def test_dataset_has_attribute_LOCAL_ZEMA_DATASET_PATH() -> None:
-    assert hasattr(dataset, "LOCAL_ZEMA_DATASET_PATH")
-
-
-def test_dataset_attribute_LOCAL_ZEMA_DATASET_PATH_is_path() -> None:
-    assert isinstance(LOCAL_ZEMA_DATASET_PATH, Path)
-
-
-def test_dataset_attribute_LOCAL_ZEMA_DATASET_PATH_in_all() -> None:
-    assert "LOCAL_ZEMA_DATASET_PATH" in dataset.__all__
 
 
 def test_dataset_has_attribute_ZEMA_DATASET_URL() -> None:
