@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.0 (2023-01-21)
+### Feature
+* **DOI:** Introduce DOI into metadata and README badge ([`9e183e1`](https://github.com/PTB-M4D/zema_emc_annotated/commit/9e183e19d08f36b4116bcaf4797f0d669932a288))
+
+**[See all commits in this version](https://github.com/PTB-M4D/zema_emc_annotated/compare/v0.5.0...v0.6.0)**
+
 ## v0.5.0 (2023-01-21)
 ### Feature
 * **ReadTheDocs:** Introduce settings for ReadTheDocs ([`041e334`](https://github.com/PTB-M4D/zema_emc_annotated/commit/041e334e8d1fe5b71d313a459397f1d2e822dd0c))
