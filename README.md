@@ -6,11 +6,9 @@
 [![Latest Release](https://img.shields.io/github/v/release/PTB-M4D/zema_emc_annotated?label=Latest%20Release)](https://github.com/PTB-M4D/zema_emc_annotated/releases/latest)
 [![DOI](https://zenodo.org/badge/591514193.svg)](https://doi.org/10.5281/zenodo.7556142)
 
-This software provides a convenient API to access the annotated ZeMA dataset about 
-remaining useful life of an electro-mechanical cylinder on Zenodo
-([![DOI
-10.5281/zenodo.5185953](https://zenodo.org/badge/DOI/10.5281/zenodo.5185953.svg)
-](https://doi.org/10.5281/zenodo.5185953)). The code was written for _Python 3.10_.
+This software provides a convenient API to access the [annotated ZeMA dataset about 
+remaining useful life of an electro-mechanical cylinder on
+Zenodo](https://doi.org/10.5281/zenodo.5185953). The code was written for _Python 3.10_.
 
 ## Getting started
 
