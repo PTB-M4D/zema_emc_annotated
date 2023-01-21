@@ -65,6 +65,13 @@ class ZeMASamples:
 
     The underlying dataset is the annotated "Sensor data set of one electromechanical
     cylinder at ZeMA testbed (ZeMA DAQ and Smart-Up Unit)" by Dorst et al. [Dorst2021]_.
+    Each extracted sample will be cached in the download directory of the file,
+    which is handled by :func:`pooch.os_cache`, where ``<AppName>`` evaluates to
+    ``pooch``. That way the concurrent retrieval of the same data is as performant as
+    possible and can simply be left to ``zema_emc_annotated``. Where ever the result
+    of ``ZeMASamples`` is needed in an external code base, it should be safe to call
+    it over and over without causing unnecessary extractions or even downloads. The
+    underlying mechanism is Python's built-in ``pickle``.
 
     Parameters
     ----------
