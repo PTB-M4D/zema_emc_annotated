@@ -128,18 +128,10 @@ class ZeMASamples:
                 if ExtractionDataType.VALUES.value in self._current_dataset.name:
                     treating_values = True
                     print(f"    Extract values from {self._current_dataset.name}")
-                elif (
-                    ExtractionDataType.UNCERTAINTIES.value in self._current_dataset.name
-                ):
+                else:
                     treating_values = False
                     print(
                         f"    Extract uncertainties from "
-                        f"{self._current_dataset.name}"
-                    )
-                else:
-                    raise RuntimeError(
-                        "Somehow there is unexpected data in the dataset to be"
-                        f"processed. Did not expect to find "
                         f"{self._current_dataset.name}"
                     )
                 if self._current_dataset.shape[0] == 3:
