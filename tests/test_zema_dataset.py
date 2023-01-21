@@ -164,7 +164,7 @@ def test_zema_samples_expects_parameter_idx_start_of_type_int() -> None:
     assert signature(ZeMASamples).parameters["sample_size"].annotation is SampleSize
 
 
-def test_zema_samples_expects_parameter_sample_size_default_is_sample_size_default() -> None:
+def test_zema_samples_parameter_sample_size_default_is_sample_size_default() -> None:
     assert signature(ZeMASamples).parameters["sample_size"].default == SampleSize()
 
 
