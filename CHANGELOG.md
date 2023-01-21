@@ -2,6 +2,19 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.0 (2023-01-21)
+### Feature
+* **dataset:** Reintroduce strict hash checking, which can optionally be skipped ([`43360eb`](https://github.com/PTB-M4D/zema_emc_annotated/commit/43360eb405aafc468c3d4bd15794e95873c58ccc))
+* **data_types:** Introduce one aggregated data type to specify the sample size of extracted data ([`b90af83`](https://github.com/PTB-M4D/zema_emc_annotated/commit/b90af8311a5c7a297e49b5dd10597bd2e77438b7))
+
+### Fix
+* **CITATION.cff:** Fix syntax and include more metadata ([`ea274a7`](https://github.com/PTB-M4D/zema_emc_annotated/commit/ea274a789f68cc574e95593e88f5a63a7151b74e))
+
+### Documentation
+* **dataset:** Improve docstring of ZeMASamples ([`e06e793`](https://github.com/PTB-M4D/zema_emc_annotated/commit/e06e7938bb336701446b53466260df3fc81e5fba))
+
+**[See all commits in this version](https://github.com/PTB-M4D/zema_emc_annotated/compare/v0.6.0...v0.7.0)**
+
 ## v0.6.0 (2023-01-21)
 ### Feature
 * **DOI:** Introduce DOI into metadata and README badge ([`9e183e1`](https://github.com/PTB-M4D/zema_emc_annotated/commit/9e183e19d08f36b4116bcaf4797f0d669932a288))
