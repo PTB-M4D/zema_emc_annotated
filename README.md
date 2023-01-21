@@ -35,5 +35,5 @@ connection with the use of this software.
 
 ## License
 
-pytorch_gum_uncertainty_propagation is distributed under the [MIT
-license](https://github.com/BjoernLudwigPTB/pytorch_gum_uncertainty_propagation/blob/main/LICENSE).
+zema_emc_annotated is distributed under the [MIT
+license](https://github.com/PTB-M4D/zema_emc_annotated/blob/main/LICENSE).
