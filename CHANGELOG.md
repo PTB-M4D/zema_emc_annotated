@@ -2,6 +2,17 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.0 (2023-01-21)
+### Feature
+* **ReadTheDocs:** Introduce settings for ReadTheDocs ([`041e334`](https://github.com/PTB-M4D/zema_emc_annotated/commit/041e334e8d1fe5b71d313a459397f1d2e822dd0c))
+* **CITATION.cff:** Introduce proper citation metadata ([`aea8e7a`](https://github.com/PTB-M4D/zema_emc_annotated/commit/aea8e7ad742fcdd4b8f74b5e30fc1417a4524592))
+
+### Documentation
+* **README:** Improve and extend README with Disclaimer and License sections as well as new links ([`78292f9`](https://github.com/PTB-M4D/zema_emc_annotated/commit/78292f94a4a86365d44e56525a7c26171807c665))
+* **examples:** Improve and correct examples section ([`94ed4c0`](https://github.com/PTB-M4D/zema_emc_annotated/commit/94ed4c01241a6f4c3eaab8270ccfa7aada523d92))
+
+**[See all commits in this version](https://github.com/PTB-M4D/zema_emc_annotated/compare/v0.4.0...v0.5.0)**
+
 ## v0.4.0 (2023-01-16)
 ### Feature
 * **dataset:** Leave storage location specification to pooch to share data across local projects ([`dc7d7c9`](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commit/dc7d7c9fbb61a3d0fe5e55e51d58b03a3d1ab6a5))
