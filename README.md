@@ -3,7 +3,7 @@
 [![pipeline status](https://gitlab1.ptb.de/m4d/zema_emc_annotated/badges/main/pipeline.svg)](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commits/main)
 [![Documentation Status](https://readthedocs.org/projects/zema-emc-annotated/badge/?version=latest)](https://zema-emc-annotated.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/PTB-M4D/zema_emc_annotated/branch/main/graph/badge.svg?token=HQZE3FXL7N)](https://app.codecov.io/gh/PTB-M4D/zema_emc_annotated?search=&displayType=list&trend=7%20days)
-[![Latest Release](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/badges/release.svg)](https://github.com/PTB-M4D/zema_emc_annotated/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/PTB-M4D/zema_emc_annotated?label=Latest%20Release)](https://github.com/PTB-M4D/zema_emc_annotated/releases/latest)
 [![DOI](https://zenodo.org/badge/591514193.svg)](https://doi.org/10.5281/zenodo.7556142)
 
 This software provides a convenient API to access the annotated ZeMA dataset about 
