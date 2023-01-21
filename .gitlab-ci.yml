@@ -116,5 +116,7 @@ release:
     - poetry install --with release
     - git config --global user.name "Bjoern Ludwig"
     - git config --global user.email "bjoern.ludwig@ptb.de"
+    - export CI_PROJECT_NAMESPACE=PTB-M4D
+    - export CI_PROJECT_NAME=zema_emc_annotated
     - semantic-release --verbosity=DEBUG publish
   environment: production
