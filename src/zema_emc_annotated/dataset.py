@@ -3,6 +3,7 @@
 __all__ = [
     "ExtractionDataType",
     "ZeMASamples",
+    "ZEMA_DATASET_HASH",
     "ZEMA_DATASET_URL",
     "ZEMA_QUANTITIES",
 ]
@@ -24,6 +25,9 @@ from pooch import os_cache, retrieve
 
 from zema_emc_annotated.data_types import RealMatrix, RealVector, UncertainArray
 
+ZEMA_DATASET_HASH = (
+    "sha256:fb0e80de4e8928ae8b859ad9668a1b6ea6310028a6690bb8d4c1abee31cb8833"
+)
 ZEMA_DATASET_URL = "https://zenodo.org/record/5185953/files/axis11_2kHz_ZeMA_PTB_SI.h5"
 ZEMA_QUANTITIES = (
     "Acceleration",
@@ -106,7 +110,7 @@ class ZeMASamples:
     def _extract_data(self, normalize: bool) -> UncertainArray:
         dataset_full_path = retrieve(
             url=ZEMA_DATASET_URL,
-            known_hash=None,
+            known_hash=ZEMA_DATASET_HASH,
             progressbar=True,
         )
         assert exists(dataset_full_path)
