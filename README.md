@@ -4,6 +4,8 @@
 [![Documentation Status](https://readthedocs.org/projects/zema-emc-annotated/badge/?version=latest)](https://zema-emc-annotated.readthedocs.io/en/latest/?badge=latest)
 [![coverage report](https://gitlab1.ptb.de/m4d/zema_emc_annotated/badges/main/coverage.svg)](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/commits/main)
 [![Latest Release](https://gitlab1.ptb.de/m4d/zema_emc_annotated/-/badges/release.svg)](https://github.com/PTB-M4D/zema_emc_annotated/releases/latest)
+[![DOI](https://zenodo.org/badge/591514193.svg)](https://doi.org/10.5281/zenodo.7556142)
+
 
 This software provides a convenient API to access the annotated ZeMA dataset about 
 remaining useful life of an electro-mechanical cylinder on Zenodo
