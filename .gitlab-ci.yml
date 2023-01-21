@@ -119,4 +119,5 @@ release:
     - export CI_PROJECT_NAMESPACE=PTB-M4D
     - export CI_PROJECT_NAME=zema_emc_annotated
     - semantic-release --verbosity=DEBUG publish
+    - poetry publish --no-interaction --build --username $PYPI_USERNAME --password $PYPI_PASSWORD
   environment: production
