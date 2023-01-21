@@ -1,13 +1,15 @@
-from inspect import signature
+from inspect import isclass, signature
 from os.path import exists
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 import pytest
 from hypothesis import given, settings, strategies as hst
+from hypothesis.strategies import composite, DrawFn, SearchStrategy
 
 from zema_emc_annotated import dataset
-from zema_emc_annotated.data_types import UncertainArray
+from zema_emc_annotated.data_types import SampleSize, UncertainArray
 from zema_emc_annotated.dataset import (
     ExtractionDataType,
     ZEMA_DATASET_HASH,
@@ -16,7 +18,18 @@ from zema_emc_annotated.dataset import (
     ZeMASamples,
 )
 
-small_positive_integers = hst.integers(min_value=1, max_value=10)
+
+@composite
+def sample_sizes(draw: DrawFn) -> SearchStrategy[SampleSize]:
+    small_positive_integers = hst.integers(min_value=1, max_value=10)
+    return cast(
+        SearchStrategy[SampleSize],
+        SampleSize(
+            idx_first_cycle=draw(small_positive_integers),
+            n_cycles=draw(small_positive_integers),
+            datapoints_per_cycle=draw(small_positive_integers),
+        ),
+    )
 
 
 def test_dataset_has_docstring() -> None:
@@ -127,8 +140,44 @@ def test_dataset_has_attribute_zema_samples() -> None:
     assert hasattr(dataset, "ZeMASamples")
 
 
-def test_zema_samples_is_callable() -> None:
-    assert callable(ZeMASamples)
+def test_zema_samples_is_class() -> None:
+    assert isclass(ZeMASamples)
+
+
+def test_zema_samples_expects_parameter_normalize() -> None:
+    assert "normalize" in signature(ZeMASamples).parameters
+
+
+def test_zema_samples_expects_parameter_normalize_of_type_bool() -> None:
+    assert signature(ZeMASamples).parameters["normalize"].annotation is bool
+
+
+def test_zema_samples_expects_parameter_normalize_default_is_false() -> None:
+    assert signature(ZeMASamples).parameters["normalize"].default is False
+
+
+def test_zema_samples_expects_parameter_sample_size() -> None:
+    assert "sample_size" in signature(ZeMASamples).parameters
+
+
+def test_zema_samples_expects_parameter_idx_start_of_type_int() -> None:
+    assert signature(ZeMASamples).parameters["sample_size"].annotation is SampleSize
+
+
+def test_zema_samples_expects_parameter_sample_size_default_is_sample_size_default() -> None:
+    assert signature(ZeMASamples).parameters["sample_size"].default == SampleSize()
+
+
+def test_zema_samples_expects_parameter_skip_hash_check() -> None:
+    assert "skip_hash_check" in signature(ZeMASamples).parameters
+
+
+def test_zema_samples_expects_parameter_skip_hash_check_of_type_bool() -> None:
+    assert signature(ZeMASamples).parameters["skip_hash_check"].annotation is bool
+
+
+def test_zema_samples_expects_parameter_skip_hash_check_default_is_false() -> None:
+    assert signature(ZeMASamples).parameters["skip_hash_check"].default is False
 
 
 def test_dataset_all_contains_zema_samples() -> None:
@@ -137,6 +186,46 @@ def test_dataset_all_contains_zema_samples() -> None:
 
 def test_zema_samples_has_docstring() -> None:
     assert ZeMASamples.__doc__ is not None
+
+
+def test_zema_samples_has_attribute_extract_data() -> None:
+    assert hasattr(ZeMASamples, "_extract_data")
+
+
+def test_dataset_extract_data_is_callable() -> None:
+    assert callable(ZeMASamples._extract_data)
+
+
+def test_extract_data_has_docstring() -> None:
+    assert ZeMASamples._extract_data.__doc__ is not None
+
+
+def test_extract_data_expects_parameter_normalize() -> None:
+    assert "normalize" in signature(ZeMASamples._extract_data).parameters
+
+
+def test_extract_data_expects_parameter_normalize_of_type_bool() -> None:
+    assert (
+        signature(ZeMASamples._extract_data).parameters["normalize"].annotation is bool
+    )
+
+
+def test_extract_data_expects_parameter_skip_hash_check() -> None:
+    assert "skip_hash_check" in signature(ZeMASamples._extract_data).parameters
+
+
+def test_zema_samples_extract_data_parameter_skip_hash_check_of_type_bool() -> None:
+    assert (
+        signature(ZeMASamples._extract_data).parameters["skip_hash_check"].annotation
+        is bool
+    )
+
+
+def test_zema_samples_extract_data_parameter_skip_hash_check_default_is_false() -> None:
+    assert (
+        signature(ZeMASamples._extract_data).parameters["skip_hash_check"].default
+        is True
+    )
 
 
 def test_zema_samples_has_attribute_check_and_load_cache() -> None:
@@ -204,34 +293,36 @@ def test_store_cache_expects_parameter_normalize() -> None:
 
 
 @pytest.mark.webtest
-@given(small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
-def test_store_cache_stores_pickle_file_for_random_input(size_scaler: int) -> None:
-    zema_samples = ZeMASamples(11, size_scaler)
+def test_store_cache_stores_pickle_file_for_random_input(
+    sample_size: SampleSize,
+) -> None:
+    zema_samples = ZeMASamples(sample_size, skip_hash_check=True)
     assert exists(
         zema_samples._cache_path(signature(ZeMASamples).parameters["normalize"].default)
     )
 
 
 @pytest.mark.webtest
-@given(small_positive_integers, small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
 def test_check_and_load_cache_runs_for_random_uncertain_values_and_returns(
-    n_samples: int, size_scaler: int
+    sample_size: SampleSize,
 ) -> None:
-    result = ZeMASamples(n_samples, size_scaler)._check_and_load_cache(
+    result = ZeMASamples(sample_size, skip_hash_check=True)._check_and_load_cache(
         signature(ZeMASamples).parameters["normalize"].default
     )
     assert result is None or isinstance(result, UncertainArray)
 
 
 @pytest.mark.webtest
-@given(small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
 def test_check_and_load_cache_returns_something_for_existing_file(
-    size_scaler: int,
+    sample_size: SampleSize,
 ) -> None:
-    zema_samples = ZeMASamples(12, size_scaler)
+    zema_samples = ZeMASamples(sample_size, skip_hash_check=True)
     assert (
         zema_samples._check_and_load_cache(
             signature(ZeMASamples).parameters["normalize"].default
@@ -254,137 +345,81 @@ def test_cache_path_expects_stats_to_return_path() -> None:
     assert signature(ZeMASamples._cache_path).return_annotation is Path
 
 
-def test_zema_samples_expects_parameter_idx_start() -> None:
-    assert "idx_start" in signature(ZeMASamples).parameters
-
-
-def test_zema_samples_expects_parameter_n_samples() -> None:
-    assert "n_samples" in signature(ZeMASamples).parameters
-
-
-def test_zema_samples_expects_parameter_size_scaler() -> None:
-    assert "size_scaler" in signature(ZeMASamples).parameters
-
-
-def test_zema_samples_expects_parameter_normalize() -> None:
-    assert "normalize" in signature(ZeMASamples).parameters
-
-
-def test_zema_samples_expects_parameter_n_samples_as_int() -> None:
-    assert signature(ZeMASamples).parameters["n_samples"].annotation is int
-
-
-def test_zema_samples_expects_parameter_idx_start_as_int() -> None:
-    assert signature(ZeMASamples).parameters["idx_start"].annotation is int
-
-
-def test_zema_samples_expects_parameter_normalize_as_bool() -> None:
-    assert signature(ZeMASamples).parameters["normalize"].annotation is bool
-
-
-def test_dataset_zema_samples_expects_parameter_size_scaler_as_int() -> None:
-    assert signature(ZeMASamples).parameters["size_scaler"].annotation is int
-
-
-def test_zema_samples_parameter_n_samples_default_is_one() -> None:
-    assert signature(ZeMASamples).parameters["n_samples"].default == 1
-
-
-def test_zema_samples_parameter_idx_start_default_is_zero() -> None:
-    assert signature(ZeMASamples).parameters["idx_start"].default == 0
-
-
-def test_zema_samples_parameter_normalize_default_is_false() -> None:
-    assert not signature(ZeMASamples).parameters["normalize"].default
-
-
-def test_zema_samples_parameter_size_scaler_default_is_one() -> None:
-    assert signature(ZeMASamples).parameters["size_scaler"].default == 1
-
-
 def test_dataset_zema_samples_states_uncertain_values_are_uncertain_array() -> None:
     assert ZeMASamples.__annotations__["uncertain_values"] is UncertainArray
 
 
 @pytest.mark.webtest
-@given(small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
-def test_extract_samples_actually_returns_uncertain_array(n_samples: int) -> None:
-    assert isinstance(ZeMASamples(n_samples).uncertain_values, UncertainArray)
+def test_extract_samples_actually_returns_uncertain_array(
+    sample_size: SampleSize,
+) -> None:
+    assert isinstance(
+        ZeMASamples(sample_size, skip_hash_check=True).uncertain_values, UncertainArray
+    )
 
 
 @pytest.mark.webtest
-@given(small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
 def test_extract_samples_actually_returns_uncertain_array_with_n_samples_values(
-    n_samples: int,
+    sample_size: SampleSize,
 ) -> None:
-    assert len(ZeMASamples(n_samples).values) == n_samples
+    assert (
+        len(ZeMASamples(sample_size, skip_hash_check=True).values)
+        == sample_size.n_cycles
+    )
 
 
 @pytest.mark.webtest
-@given(small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
 def test_extract_samples_actually_returns_uncertain_array_with_n_samples_uncertainties(
-    n_samples: int,
+    sample_size: SampleSize,
 ) -> None:
-    result_uncertainties = ZeMASamples(n_samples).uncertainties
+    result_uncertainties = ZeMASamples(sample_size).uncertainties
     assert result_uncertainties is not None
-    assert len(result_uncertainties) == n_samples
+    assert len(result_uncertainties) == sample_size.n_cycles
 
 
 @pytest.mark.webtest
-@given(small_positive_integers)
-@settings(deadline=None)
-def test_default_extract_samples_returns_values_of_eleven_sensors(
-    n_samples: int,
-) -> None:
-    assert ZeMASamples(n_samples).values.shape[1] == 11
-
-
-@pytest.mark.webtest
-@given(small_positive_integers, small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
 def test_extract_samples_returns_eleven_times_scaler_values(
-    n_samples: int, size_scaler: int
+    sample_size: SampleSize,
 ) -> None:
-    assert ZeMASamples(n_samples, size_scaler).values.shape[1] == 11 * size_scaler
+    assert (
+        ZeMASamples(sample_size, skip_hash_check=True).values.shape[1]
+        == 11 * sample_size.datapoints_per_cycle
+    )
 
 
 @pytest.mark.webtest
-@given(small_positive_integers)
-@settings(deadline=None)
-def test_default_extract_samples_returns_uncertainties_of_eleven_sensors(
-    n_samples: int,
-) -> None:
-    result_uncertainties = ZeMASamples(n_samples).uncertainties
-    assert result_uncertainties is not None
-    assert result_uncertainties.shape[1] == 11
-
-
-@pytest.mark.webtest
-@given(small_positive_integers, small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
 def test_extract_samples_returns_eleven_times_scaler_uncertainties(
-    n_samples: int, size_scaler: int
+    sample_size: SampleSize,
 ) -> None:
-    result_uncertainties = ZeMASamples(n_samples, size_scaler).uncertainties
+    result_uncertainties = ZeMASamples(sample_size, skip_hash_check=True).uncertainties
     assert result_uncertainties is not None
-    assert result_uncertainties.shape[1] == 11 * size_scaler
+    assert result_uncertainties.shape[1] == 11 * sample_size.datapoints_per_cycle
 
 
 @pytest.mark.webtest
-@given(small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
 def test_extract_samples_returns_values_and_uncertainties_which_are_not_similar(
-    n_samples: int,
+    sample_size: SampleSize,
 ) -> None:
-    result = ZeMASamples(n_samples)
+    result = ZeMASamples(sample_size, skip_hash_check=True)
     assert not np.all(result.values == result.uncertainties)
 
 
 @pytest.mark.webtest
-@given(hst.integers(min_value=1, max_value=10000))
+@given(
+    hst.integers(min_value=1, max_value=10000),
+)
 @settings(deadline=None)
 def test_zema_samples_fails_for_more_than_4766_samples(
     n_samples_above_max: int,
@@ -394,48 +429,50 @@ def test_zema_samples_fails_for_more_than_4766_samples(
         match=r"all the input array dimensions except for the concatenation axis must "
         r"match exactly.*",
     ):
-        ZeMASamples(4766 + n_samples_above_max)
+        ZeMASamples(SampleSize(4766, n_samples_above_max), skip_hash_check=True)
 
 
 @pytest.mark.webtest
 def test_zema_samples_creates_pickle_files() -> None:
     for size_scaler in (1, 10, 100, 1000, 2000):
         for normalize in (True, False):
-            assert ZeMASamples(size_scaler=size_scaler, normalize=normalize)
+            assert ZeMASamples(
+                SampleSize(datapoints_per_cycle=size_scaler),
+                normalize=normalize,
+                skip_hash_check=True,
+            )
 
 
 @pytest.mark.webtest
-@given(small_positive_integers, small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
 def test_zema_samples_normalized_mean_is_smaller_or_equal(
-    n_samples: int, size_scaler: int
+    sample_size: SampleSize,
 ) -> None:
-    normalized_result = ZeMASamples(n_samples, size_scaler, True)
-    not_normalized_result = ZeMASamples(n_samples, size_scaler)
+    normalized_result = ZeMASamples(sample_size, normalize=True, skip_hash_check=True)
+    not_normalized_result = ZeMASamples(sample_size, skip_hash_check=True)
     assert not_normalized_result.values.mean() >= normalized_result.values.mean()
 
 
 @pytest.mark.webtest
-@given(small_positive_integers, small_positive_integers)
+@given(sample_sizes())
 @settings(deadline=None)
 def test_zema_samples_normalized_std_is_smaller_or_equal(
-    n_samples: int, size_scaler: int
+    sample_size: SampleSize,
 ) -> None:
-    normalized_result = ZeMASamples(n_samples, size_scaler, True)
-    not_normalized_result = ZeMASamples(n_samples, size_scaler)
+    normalized_result = ZeMASamples(sample_size, normalize=True, skip_hash_check=True)
+    not_normalized_result = ZeMASamples(sample_size, skip_hash_check=True)
     assert not_normalized_result.values.std() >= normalized_result.values.std()
 
 
 @pytest.mark.webtest
 @given(
-    small_positive_integers,
-    small_positive_integers,
+    sample_sizes(),
     hst.booleans(),
-    hst.integers(min_value=1, max_value=9),
 )
 @settings(deadline=None)
 def test_zema_samples_cache_path_contains_starting_from_for_larger_than_zero_startpoint(
-    n_samples: int, size_scaler: int, normalize: bool, idx_start: int
+    sample_size: SampleSize, normalize: bool
 ) -> None:
-    zema_samples = ZeMASamples(n_samples, size_scaler, normalize, idx_start)
+    zema_samples = ZeMASamples(sample_size, normalize, skip_hash_check=True)
     assert "_starting_from_" in str(zema_samples._cache_path(normalize))
