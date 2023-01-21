@@ -69,6 +69,7 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 black = {extras = ["jupyter"], version = "^22.12.0"}
+cffconvert = "^2.0.0"
 
 [tool.poetry.group.release]
 optional = true
