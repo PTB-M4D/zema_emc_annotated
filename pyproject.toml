@@ -110,8 +110,9 @@ version_pattern = "CITATION.cff:^version: {version}"
 major_on_zero = false
 changelog_sections = "feature,fix,breaking,documentation,performance"
 changelog_components = "semantic_release.changelog.changelog_headers,semantic_release.changelog.compare_url"
-upload_to_repository = false
+upload_to_repository = true
 upload_to_release = true
+build_command = "poetry build"
 hvcs = "github"
 commit_author= "Bjoern Ludwig <bjoern.ludwig@ptb.de>"
 
