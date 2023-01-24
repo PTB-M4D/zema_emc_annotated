@@ -72,4 +72,4 @@ references:
     repository: https://doi.org/10.5281/zenodo.5185953
     repository-artifact: >-
       https://zenodo.org/record/5185953/files/axis11_2kHz_ZeMA_PTB_SI.h5?download=1
-    license: Creative Commons Attribution 4.0 International
+    license: CC-BY-4.0
