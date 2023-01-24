@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.1 (2023-01-24)
+### Fix
+* **CITATION:** Replace wrong license string for schema-compliance, thus to ensure interpretability ([`a62fc16`](https://github.com/PTB-M4D/zema_emc_annotated/commit/a62fc16d92f157e4fc5c8bd9dc6634720b5c1442))
+
+**[See all commits in this version](https://github.com/PTB-M4D/zema_emc_annotated/compare/v0.7.0...v0.7.1)**
+
 ## v0.7.0 (2023-01-21)
 ### Feature
 * **dataset:** Reintroduce strict hash checking, which can optionally be skipped ([`43360eb`](https://github.com/PTB-M4D/zema_emc_annotated/commit/43360eb405aafc468c3d4bd15794e95873c58ccc))

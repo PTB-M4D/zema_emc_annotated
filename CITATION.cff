@@ -42,7 +42,7 @@ keywords:
   - Horizon 2020
   - EMPIR
 license: MIT
-version: 0.7.0
+version: 0.7.1
 identifiers:
   - description: >-
       This is the general DOI to cite all versions of the software. To cite a specific
